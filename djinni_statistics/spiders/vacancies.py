@@ -1,3 +1,5 @@
+import dateparser
+
 import scrapy
 from scrapy.http import Response
 
@@ -24,13 +26,9 @@ class VacanciesSpider(scrapy.Spider):
     def parse_vacancy(response: Response):
         title = response.css("h1::text").get().strip().replace("\xa0", " ")
 
-        technologies_raw = response.css(
+        technologies = response.css(
             ".job-additional-info--item:nth-child(2) > div > span::text"
         ).getall()
-        print(technologies_raw)
-
-        technologies = [technology.replace("/", ",") for technology in technologies_raw]
-        print(technologies)
 
         experience = response.css(
             ".job-additional-info--item:last-child > div::text"
@@ -41,7 +39,8 @@ class VacanciesSpider(scrapy.Spider):
         else:
             experience = 0
 
-        date = response.css("p.text-muted").re(r"\d+\s+\w+\s+\d+")[0]
+        date_str = response.css("p.text-muted").re(r"\d+\s+\w+\s+\d+")[0]
+        date = dateparser.parse(date_str).date()
 
         views = int(response.css("p.text-muted").re(r"(\d+) перегляд")[0])
 
